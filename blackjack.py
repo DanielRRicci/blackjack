@@ -3,8 +3,9 @@ import os
 
 
 class BlackjackGame:
+
     def __init__(self, player_name: str):
-        
+        self.player_name = player_name
         self.player_hand = []
         self.dealer_hand = []
         self.deck = []
@@ -14,7 +15,11 @@ class BlackjackGame:
         self.deck_count = 52
         self.game_over = False
         self.double = False
-        self.money = self.load_money()
+        self.balance = 1000
+        self.games_played = 0
+        self.games_won = 0
+        self.games_lost = 0
+
 
     def hit(self, player):
         rand = random.randint(0, self.deck_count)
@@ -58,23 +63,33 @@ class BlackjackGame:
             total += self.dealer_hand[i - 1]
         return total
     
-    def load_money(self):
-        if os.path.exists("money.txt"):
-            with open("money.txt", "r") as file:
-                try:
-                    return int(file.read())
-                except ValueError:
-                    return 1000  # fallback if file is corrupted
-        else:
-            # File doesn't exist, create it with default value
-            with open("money.txt", "w") as file:
-                file.write("1000")
-            return 1000
-        
-    def save_money(self, money):
-        with open("money.txt", "w") as file:
-            file.write(str(money))
+    def get_data(self):
+        player_exists = False
+        user_data = []
+        if os.path.exists("user_data.txt"):
+            with open("user_data.txt", "r") as file:
+                for line in file:
+                    user_data = line.strip().split(" ")
+                    if user_data[0] == self.player_name:
+                        player_exists = True
+                        break
+                if not player_exists:
+                    self.create_new_player(self.player_name)
 
-    def update_money(self, amount):
-        self.money += amount
-        self.save_money(self.money)
+
+    def create_new_player(self, player_name: str):
+        default_line = f"{player_name} 1000 0 0 0\n"
+        
+        with open("user_data.txt", "a") as file:
+            file.write(default_line)
+
+    def set_balance(self, new_balance: int):
+        self.balance = new_balance
+
+    def increment_win(self):
+        self.games_won += 1
+        self.games_played += 1
+
+    def increment_loss(self):
+        self.games_lost += 1
+        self.games_played += 1
