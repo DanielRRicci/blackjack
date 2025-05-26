@@ -32,7 +32,7 @@ title_rect = title_surf.get_rect(center = (board_rect.centerx, board_rect.center
 
 ########### deck
 deck_surf = pygame.image.load('graphics/blueback.png').convert()
-deck_rect = deck_surf.get_rect(center = (1400, board_rect.centery))
+deck_rect = deck_surf.get_rect(center = (1400, board_rect.centery + 100))
 
 ########### text typing location thing
 bar_surf = pygame.Surface((5, 60))
@@ -45,6 +45,34 @@ who_rect = who_surf.get_rect(center = (board_rect.centerx, board_rect.centery - 
 ########### bet amount warning
 bet_warn_surf = warning_font.render("Please enter a value less than or equal to your current balance", False, 'Black')
 bet_warn_rect = bet_warn_surf.get_rect(center = (board_rect.centerx, board_rect.centery + 250))
+
+########### player total title
+player_total_text_surf = warning_font.render("Player Total", False, 'Black')
+player_total_text_rect = player_total_text_surf.get_rect(center = (200, 600))
+
+########### dealer total title
+dealer_total_text_surf = warning_font.render("Dealer Total", False, 'Black')
+dealer_total_text_rect = dealer_total_text_surf.get_rect(center = (200, 400))
+
+########### player WIN title
+win_surf = title_font.render("WIN", False, 'Black')
+win_rect = win_surf.get_rect(center = (board_rect.centerx, 100))
+
+########### player LOSS title
+loss_surf = title_font.render("LOSS", False, 'Black')
+loss_rect = loss_surf.get_rect(center = (board_rect.centerx, 100))
+
+########### player BLACKJACK title
+blackjack_surf = play_font.render("BLACKJACK: ", False, 'Black')
+blackjack_rect = blackjack_surf.get_rect(center = (board_rect.centerx - 500, 100))
+
+########### player BUST title
+bust_surf = play_font.render("BUST: ", False, 'Black')
+bust_rect = bust_surf.get_rect(center = (board_rect.centerx - 400, 100))
+
+########### player PUSH title
+push_surf = title_font.render("PUSH", False, 'Black')
+push_rect = push_surf.get_rect(center = (board_rect.centerx, 100))
 
 ######################  BUTTONS   ###################################
 ########## play button
@@ -165,7 +193,7 @@ while playing:
 
         if continue_rect.collidepoint(mouse_pos):
             screen.blit(continue_surf_hover, continue_rect)
-            if clicked and typed_name is not "":
+            if clicked and typed_name != "":
                 break
 
         pygame.display.update()
@@ -220,7 +248,7 @@ while playing:
         screen.blit(bet_surf, bet_rect)
         screen.blit(text_surf, text_rect)
         screen.blit(current_balance_surf, current_balance_rect)
-        if typed_number is not "":
+        if typed_number != "":
             if int(typed_number) > player_balance:
                 screen.blit(bet_warn_surf, bet_warn_rect)
                 balance_warning = True
@@ -231,7 +259,7 @@ while playing:
 
         if bet_rect.collidepoint(mouse_pos):
             screen.blit(bet_surf_hover, bet_rect)
-            if clicked and not balance_warning:
+            if clicked and not balance_warning and typed_number != "":
                 break
 
         pygame.display.update()
@@ -250,6 +278,7 @@ while playing:
 
 
 
+    game.start_round()
     while True:
         clicked = False
         for event in pygame.event.get():
@@ -266,28 +295,96 @@ while playing:
 
         for i in range(13):
             screen.blit(deck_surf, (deck_rect.left + 2 * i, deck_rect.top + 2 * i))
-
-        # screen.blit(hitbordertop, (400, board_rect.centery - 50))
-        # screen.blit(hitbordertop, (410, board_rect.centery + 50))
-        # screen.blit(hitborderside, (400, board_rect.centery - 40))
-        # screen.blit(hitborderside, (600, board_rect.centery - 50))
         screen.blit(hit_surf, hit_rect)
         screen.blit(stand_surf, stand_rect)
         screen.blit(double_surf, double_rect)
+        screen.blit(player_total_text_surf, player_total_text_rect)
+        screen.blit(dealer_total_text_surf, dealer_total_text_rect)
+        player_card_total = game.get_player_totals()[0]
+        player_card_alt_total = game.get_player_totals()[1]
+        dealer_card_total = game.get_dealer_totals()[0]
+        dealer_card_alt_total = game.get_dealer_totals()[1]
+        if(player_card_total != player_card_alt_total):
+            player_total_surf = warning_font.render(str(player_card_total) + "/" + str(player_card_alt_total), False, 'Black')
+        else:
+            player_total_surf = warning_font.render(str(player_card_total), False, 'Black')
+        player_total_rect = player_total_surf.get_rect(midtop = player_total_text_rect.midbottom)
+
+        if(dealer_card_total != dealer_card_alt_total):
+            dealer_total_surf = warning_font.render(str(dealer_card_total) + "/" + str(dealer_card_alt_total), False, 'Black')
+        else:
+            dealer_total_surf = warning_font.render(str(dealer_card_total), False, 'Black')
+        dealer_total_rect = dealer_total_surf.get_rect(midtop = dealer_total_text_rect.midbottom)
+
+        screen.blit(player_total_surf, player_total_rect)
+        screen.blit(dealer_total_surf, dealer_total_rect)
+
+        ############################### DISPLAYING PLAYER CARDS
+        card_x_pos = 75
+        card_y_pos = 750
+
+        for card in game.player_hand:
+            card_surf = pygame.image.load("graphics/" + game.get_card(card) + ".png").convert()
+            card_rect = card_surf.get_rect(midleft = (card_x_pos, card_y_pos))
+            card_x_pos += 136
+            screen.blit(card_surf, card_rect)
+        ##############################
+
+        ############################### DISPLAYING DEALER CARDS
+
+        card_x_pos = 75
+        card_y_pos = 300
+
+        if game.is_game_over():
+
+            for card in game.dealer_hand:
+                card_surf = pygame.image.load("graphics/" + game.get_card(card) + ".png").convert()
+                card_rect = card_surf.get_rect(midleft = (card_x_pos, card_y_pos))
+                card_x_pos += 136
+                screen.blit(card_surf, card_rect)
+
+        else:
+            card_surf = pygame.image.load("graphics/" + game.get_card(game.dealer_hand[0]) + ".png"). convert()
+            card_rect = card_surf.get_rect(midleft = (card_x_pos, card_y_pos))
+            card_x_pos += 136
+            screen.blit(card_surf, card_rect)
+            blank_surf = pygame.image.load("graphics/blueback.png").convert()
+            blank_rect = blank_surf.get_rect(midleft = (card_x_pos, card_y_pos))
+            screen.blit(blank_surf, blank_rect)
+
+        ##############################
+
+        ############################## DISPLAY WIN/LOSS
+        if(game.is_game_over()):
+            if game.player_win:
+                screen.blit(win_surf, win_rect)
+                if game.player_blackjack:
+                    screen.blit(blackjack_surf, blackjack_rect)
+            elif game.dealer_win:
+                screen.blit(loss_surf, loss_rect)
+                if game.player_bust:
+                    screen.blit(bust_surf, bust_rect)
+            elif game.push:
+                screen.blit(push_surf, push_rect)
+            
+
+
+        ##############################
 
         mouse_pos = pygame.mouse.get_pos()
 
-        if hit_rect.collidepoint(mouse_pos):
+        if hit_rect.collidepoint(mouse_pos) and not game.is_game_over():
             screen.blit(hit_surf_hover, hit_rect)
             if clicked and not animation:
-                print("clicked")
+                game.player_hit()
+                print("hit")
 
-        if stand_rect.collidepoint(mouse_pos):
+        if stand_rect.collidepoint(mouse_pos) and not game.is_game_over():
             screen.blit(stand_surf_hover, stand_rect)
             if clicked and not animation:
                 print("clicked")
 
-        if double_rect.collidepoint(mouse_pos):
+        if double_rect.collidepoint(mouse_pos) and not game.is_game_over():
             screen.blit(double_surf_hover, double_rect)
             if clicked and not animation:
                 print("clicked")
