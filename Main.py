@@ -20,6 +20,7 @@ text_font = pygame.font.Font('font/BJ_Font.ttf', 50)
 button_font = pygame.font.Font('font/BJ_Font.ttf', 60)
 title_font = pygame.font.Font('font/BJ_Font.ttf', 150)
 play_font = pygame.font.Font('font/BJ_Font.ttf', 100)
+warning_font = pygame.font.Font('font/BJ_Font.ttf', 30)
 
 ########### background
 board_surf = pygame.image.load('graphics/BJB.png').convert()
@@ -40,6 +41,10 @@ bar_surf.fill('Black')
 ########### who's playing text
 who_surf = text_font.render("Who's Playing?", False, 'Black')
 who_rect = who_surf.get_rect(center = (board_rect.centerx, board_rect.centery - 150))
+
+########### bet amount warning
+bet_warn_surf = warning_font.render("Please enter a value less than or equal to your current balance", False, 'Black')
+bet_warn_rect = bet_warn_surf.get_rect(center = (board_rect.centerx, board_rect.centery + 250))
 
 ######################  BUTTONS   ###################################
 ########## play button
@@ -176,12 +181,15 @@ while playing:
     can_type = True
     typed_number = ""
     frame_counter = 0
+    player_balance = game.get_balance()
     ######################### Bet amount screen
     while True:
         clicked = False
         frame_counter += 1
         if frame_counter == 60:
             frame_counter = 0
+
+        balance_warning = False
         
         for event in pygame.event.get():
             if(event.type == pygame.QUIT):
@@ -202,6 +210,8 @@ while playing:
         ########### Generate text surface/rectangle
         text_surf = text_font.render(typed_number, False, 'Grey')
         text_rect = text_surf.get_rect(topleft = (board_rect.centerx - 100, board_rect.centery - 50))
+        current_balance_surf = warning_font.render("Current Balance is " + str(player_balance) + ":", False, 'Black')
+        current_balance_rect = current_balance_surf.get_rect(right = text_rect.left - 50, centery = text_rect.centery)
         
         bar_rect = bar_surf.get_rect(midleft = text_rect.midright)
 
@@ -209,6 +219,11 @@ while playing:
         screen.blit(board_surf,board_rect)
         screen.blit(bet_surf, bet_rect)
         screen.blit(text_surf, text_rect)
+        screen.blit(current_balance_surf, current_balance_rect)
+        if typed_number is not "":
+            if int(typed_number) > player_balance:
+                screen.blit(bet_warn_surf, bet_warn_rect)
+                balance_warning = True
         if (frame_counter // 30) % 2 == 0:
             screen.blit(bar_surf, bar_rect)
 
@@ -216,7 +231,7 @@ while playing:
 
         if bet_rect.collidepoint(mouse_pos):
             screen.blit(bet_surf_hover, bet_rect)
-            if clicked:
+            if clicked and not balance_warning:
                 break
 
         pygame.display.update()
