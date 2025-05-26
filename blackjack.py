@@ -1,6 +1,20 @@
 import random
 import os
+import sqlite3
 
+conn = sqlite3.connect("player_data.db")
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS players (
+    name VARCHAR(20) PRIMARY KEY,
+    value INTEGER DEFAULT(1000) NOT NULL,
+    wins INTEGER DEFAULT(0) NOT NULL,
+    losses INTEGER DEFAULT(0) NOT NULL,
+    games INTEGER DEFAULT(0) NOT NULL
+)
+""")
+conn.commit()
 
 class BlackjackGame:
 
@@ -15,11 +29,40 @@ class BlackjackGame:
         self.deck_count = 52
         self.game_over = False
         self.double = False
+
+
         self.balance = 1000
         self.games_played = 0
         self.games_won = 0
         self.games_lost = 0
 
+    def get_data(self):
+        cursor.execute("SELECT * FROM players WHERE name = ?", (self.player_name,))
+        result = cursor.fetchone()
+        if result is not None:
+            name, value, wins, losses, games = result
+            self.balance = value
+            self.games_won = wins
+            self.games_lost = losses
+            self.games_played = games
+        else:
+            cursor.execute("Insert into players (name) values (?)", (self.player_name,))
+            conn.commit()
+            
+    def save_data(self):
+        cursor.execute("UPDATE players SET value = ?, wins = ?, losses = ?, games = ? WHERE name = ? ", (self.player_name, self.balance, self.games_won, self.games_lost, self.games_played))
+        conn.commit()
+
+    def set_balance(self, new_balance: int):
+        self.balance = new_balance
+
+    def increment_win(self):
+        self.games_won += 1
+        self.games_played += 1
+
+    def increment_loss(self):
+        self.games_lost += 1
+        self.games_played += 1
 
     def hit(self, player):
         rand = random.randint(0, self.deck_count)
@@ -62,34 +105,3 @@ class BlackjackGame:
         for i in range(self.dealer_hand_count):
             total += self.dealer_hand[i - 1]
         return total
-    
-    def get_data(self):
-        player_exists = False
-        user_data = []
-        if os.path.exists("user_data.txt"):
-            with open("user_data.txt", "r") as file:
-                for line in file:
-                    user_data = line.strip().split(" ")
-                    if user_data[0] == self.player_name:
-                        player_exists = True
-                        break
-                if not player_exists:
-                    self.create_new_player(self.player_name)
-
-
-    def create_new_player(self, player_name: str):
-        default_line = f"{player_name} 1000 0 0 0\n"
-        
-        with open("user_data.txt", "a") as file:
-            file.write(default_line)
-
-    def set_balance(self, new_balance: int):
-        self.balance = new_balance
-
-    def increment_win(self):
-        self.games_won += 1
-        self.games_played += 1
-
-    def increment_loss(self):
-        self.games_lost += 1
-        self.games_played += 1
