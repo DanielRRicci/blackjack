@@ -29,18 +29,25 @@ class BlackjackGame:
         self.player_hand_count = 0
         self.dealer_hand_count = 0
         self.game_over = False
+        self.past_init = False
+        self.can_double = True
+        self.paid = False
+        self.dealer_bust = False
         self.player_blackjack = False
+        self.can_blackjack = True
         self.player_bust = False
         self.player_win = False
         self.dealer_win = False
         self.push = False
-        self.double = False
         self.player_total = 0
         self.dealer_total = 0
         self.player_alt = False
         self.dealer_alt = False
         self.player_high_total = 0
         self.dealer_high_total = 0
+
+        self.bet = 0
+        
         
 
         #initialize values in case account does not currently exist in database
@@ -60,6 +67,8 @@ class BlackjackGame:
         self.dealer_hit()
         self.player_hit()
         self.dealer_hit()
+        self.can_blackjack = False
+        self.past_init = True
 
     def player_hit(self):
         rand = random.randint(0, len(self.deck) - 1)
@@ -68,6 +77,8 @@ class BlackjackGame:
         self.player_hand_count += 1
         self.set_player_total()
         self.check_game_state()
+        if self.past_init:
+            self.can_double = False
 
     def dealer_hit(self):
         rand = random.randint(0, len(self.deck) - 1)
@@ -77,12 +88,19 @@ class BlackjackGame:
         self.set_dealer_total()
 
     def double(self):
-        self.hit(True)
-        self.double = True
+        self.player_hit()
+        self.bet *= 2
         self.stand()
 
     def stand(self):
+        while self.should_dealer_draw():
+            self.dealer_hit()
         self.game_over = True
+        self.check_game_state()
+        
+    def place_bet(self, bet_value: int):
+        self.bet = bet_value
+        self.balance -= bet_value
 
     def get_card(self, num):
         suits = ['c', 'd', 'h', 's']
@@ -124,7 +142,7 @@ class BlackjackGame:
         high_total = 0
         aces = 0
         for i in range(self.dealer_hand_count):
-            card_value = (self.player_hand[i] % 13) + 1
+            card_value = (self.dealer_hand[i] % 13) + 1
             if card_value == 1:
                 total += 1
                 high_total += 11
@@ -157,21 +175,65 @@ class BlackjackGame:
     def check_game_state(self):
         total = self.get_player_totals()[0]
         high_total = self.get_player_totals()[1]
-        if total == 21 or high_total == 21 and self.player_blackjack == False:
+        d_total = self.get_dealer_totals()[0]
+        d_high_total = self.get_dealer_totals()[1]
+        if total == 21 or high_total == 21 and self.can_blackjack == True:
             self.player_blackjack = True
             self.game_over = True
             self.player_win = True
             self.dealer_win = False
+            self.increment_win()
         elif total > 21:
             self.player_bust = True
             self.game_over = True
             self.player_win = False
             self.dealer_win = True
-        elif self.is_game_over() == True and self.player_blackjack == False:
+            self.increment_loss()
+        elif d_total > 21:
+            self.game_over = True
+            self.player_win = True
+            self.dealer_win = False
+            self.dealer_bust = True
+            self.increment_win()
+        elif self.is_game_over() == True and high_total == d_high_total:
             self.push = True
             self.player_win = False
             self.dealer_win = False
+            self.game_over = True
+            self.increment_ties()
+        elif high_total > d_high_total and self.game_over:
+            self.player_win = True
+            self.dealer_win = False
+            self.increment_win()
+        elif high_total < d_high_total and self.game_over:
+            self.player_win = False
+            self.dealer_win = True
+            self.increment_loss()
         
+    def should_dealer_draw(self):
+        low = self.get_dealer_totals()[0]
+        high = self.get_dealer_totals()[1]
+        if low != high:
+            return (high < 18)
+        else:
+            return (low < 17)
+        
+    def pay(self):
+        if not self.paid:
+            self.balance += self.payout()
+            self.paid = True
+        
+    def payout(self):
+        payout = self.bet
+        if self.player_blackjack:
+            payout = self.bet * 3
+        elif self.push:
+            payout = self.bet
+        elif self.player_win:
+            payout = self.bet * 2
+        else:
+            payout = 0
+        return payout
 
 #################### Account Info Getters/Setters
     def set_balance(self, new_balance: int):
@@ -194,6 +256,10 @@ class BlackjackGame:
     def get_losses(self):
         return self.games_lost
     
+    def increment_ties(self):
+        self.games_tied += 1
+        self.games_played += 1
+    
     def get_games(self):
         return self.games_played
     
@@ -202,11 +268,12 @@ class BlackjackGame:
         cursor.execute("SELECT * FROM players WHERE name = ?", (self.player_name,))
         result = cursor.fetchone()
         if result is not None:
-            name, value, wins, losses, games = result
+            name, value, wins, losses, games, ties = result
             self.balance = value
             self.games_won = wins
             self.games_lost = losses
             self.games_played = games
+            self.games_tied = ties
         else:
             cursor.execute("Insert into players (name) values (?)", (self.player_name,))
             conn.commit()
