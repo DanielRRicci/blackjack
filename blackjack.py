@@ -9,7 +9,7 @@ cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS players (
     name VARCHAR(20) PRIMARY KEY,
-    value INTEGER DEFAULT(1000) NOT NULL,
+    value INTEGER NOT NULL,
     wins INTEGER DEFAULT(0) NOT NULL,
     losses INTEGER DEFAULT(0) NOT NULL,
     ties INTEGER DEFAULT(0) NOT NULL,
@@ -51,12 +51,13 @@ class BlackjackGame:
         
 
         #initialize values in case account does not currently exist in database
-        self.balance = 1000
-        self.games_played = 0
-        self.games_won = 0
-        self.games_lost = 0
-        self.games_tied = 0
-        self.games_played = 0
+        # list[int] = self.get_data()
+        # self.balance = 1000
+        # self.games_played = 0
+        # self.games_won = 0
+        # self.games_lost = 0
+        # self.games_tied = 0
+        # self.games_played = 0
 
 
         #check if account exists and load values if so OR create new account with default values if not
@@ -222,6 +223,7 @@ class BlackjackGame:
         if not self.paid:
             self.balance += self.payout()
             self.paid = True
+            self.save_data()
         
     def payout(self):
         payout = self.bet
@@ -268,16 +270,24 @@ class BlackjackGame:
         cursor.execute("SELECT * FROM players WHERE name = ?", (self.player_name,))
         result = cursor.fetchone()
         if result is not None:
-            name, value, wins, losses, games, ties = result
+            name, value, wins, losses, ties, games = result
+            name = name
             self.balance = value
             self.games_won = wins
             self.games_lost = losses
-            self.games_played = games
             self.games_tied = ties
+            self.games_played = games
+            print("Result not none")
+            print(value)
         else:
-            cursor.execute("Insert into players (name) values (?)", (self.player_name,))
+            cursor.execute("Insert into players (name, value, wins, losses, ties, games) values (?, 1000, 0, 0, 0, 0)", (self.player_name,))
             conn.commit()
+            print("Result none")
+            self.get_data()
             
     def save_data(self):
-        cursor.execute("UPDATE players SET value = ?, wins = ?, losses = ?, ties = ?, games = ? WHERE name = ? ", (self.player_name, self.balance, self.games_won, self.games_lost, self.games_tied, self.games_played))
+        cursor.execute("""UPDATE players SET name = ?, value = ?, wins = ?, 
+                       losses = ?, ties = ?, games = ? WHERE name = ?""", 
+                       (self.player_name, self.balance, self.games_won, self.games_lost, self.games_tied, self.games_played, self.player_name))
+        print(str(self.balance) + " balance")
         conn.commit()

@@ -398,7 +398,6 @@ while playing:
     ################################################################################################
     ############################## Game end screen #################################################
         game.pay()
-        game.save_data()
         while True:
             mouse_pos = pygame.mouse.get_pos()
             clicked = False
@@ -539,3 +538,4 @@ while playing:
 
             pygame.display.update()
             clock.tick(60)
+        game.save_data()
