@@ -25,7 +25,10 @@ class BlackjackGame:
         self.player_hand = []
         self.dealer_hand = []
         self.deck = []
-        self.init_deck()
+
+        self.get_data()
+
+    def start_round(self):
         self.player_hand_count = 0
         self.dealer_hand_count = 0
         self.game_over = False
@@ -45,25 +48,10 @@ class BlackjackGame:
         self.dealer_alt = False
         self.player_high_total = 0
         self.dealer_high_total = 0
-
         self.bet = 0
-        
-        
-
-        #initialize values in case account does not currently exist in database
-        # list[int] = self.get_data()
-        # self.balance = 1000
-        # self.games_played = 0
-        # self.games_won = 0
-        # self.games_lost = 0
-        # self.games_tied = 0
-        # self.games_played = 0
 
 
-        #check if account exists and load values if so OR create new account with default values if not
-        self.get_data()
-
-    def start_round(self):
+        self.init_deck()
         self.player_hit()
         self.dealer_hit()
         self.player_hit()
@@ -178,7 +166,7 @@ class BlackjackGame:
         high_total = self.get_player_totals()[1]
         d_total = self.get_dealer_totals()[0]
         d_high_total = self.get_dealer_totals()[1]
-        if total == 21 or high_total == 21 and self.can_blackjack == True:
+        if (total == 21 or high_total == 21) and self.can_blackjack == True:
             self.player_blackjack = True
             self.game_over = True
             self.player_win = True
@@ -214,6 +202,8 @@ class BlackjackGame:
     def should_dealer_draw(self):
         low = self.get_dealer_totals()[0]
         high = self.get_dealer_totals()[1]
+        if high > self.get_player_totals()[1]:
+            return False
         if low != high:
             return (high < 18)
         else:
@@ -228,7 +218,7 @@ class BlackjackGame:
     def payout(self):
         payout = self.bet
         if self.player_blackjack:
-            payout = self.bet * 3
+            payout = int(self.bet * 2.5)
         elif self.push:
             payout = self.bet
         elif self.player_win:

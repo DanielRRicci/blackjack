@@ -1,6 +1,19 @@
 import pygame
 from sys import exit
 from blackjack import BlackjackGame
+import sys
+import os
+
+
+if getattr(sys, 'frozen', False):
+    # Running from .exe
+    base_path = sys._MEIPASS
+else:
+    # Running from script
+    base_path = os.path.abspath(".")
+
+
+
 
 pygame.init()
 screen = pygame.display.set_mode((1600, 900))
@@ -17,16 +30,15 @@ adjust = True
 
 
 
-
 ########## fonts
-text_font = pygame.font.Font('font/BJ_Font.ttf', 50)
-button_font = pygame.font.Font('font/BJ_Font.ttf', 60)
-title_font = pygame.font.Font('font/BJ_Font.ttf', 150)
-play_font = pygame.font.Font('font/BJ_Font.ttf', 100)
-warning_font = pygame.font.Font('font/BJ_Font.ttf', 30)
+text_font = pygame.font.Font(os.path.join(base_path, 'font', 'BJ_Font.ttf'), 50)
+button_font = pygame.font.Font(os.path.join(base_path, 'font', 'BJ_Font.ttf'), 60)
+title_font = pygame.font.Font(os.path.join(base_path, 'font', 'BJ_Font.ttf'), 150)
+play_font = pygame.font.Font(os.path.join(base_path, 'font', 'BJ_Font.ttf'), 100)
+warning_font = pygame.font.Font(os.path.join(base_path, 'font', 'BJ_Font.ttf'), 30)
 
 ########### background
-board_surf = pygame.image.load('graphics/BJB.png').convert()
+board_surf = pygame.image.load(os.path.join(base_path, 'graphics', 'BJB.png')).convert()
 board_rect = board_surf.get_rect(topleft = (0,0))
 
 ########### title
@@ -34,7 +46,7 @@ title_surf = title_font.render('Blackjack', False, 'Black')
 title_rect = title_surf.get_rect(center = (board_rect.centerx, board_rect.centery - 200))
 
 ########### deck
-deck_surf = pygame.image.load('graphics/blueback.png').convert()
+deck_surf = pygame.image.load(os.path.join(base_path, 'graphics', 'blueback.png')).convert()
 deck_rect = deck_surf.get_rect(center = (120, 100))
 
 ########### text typing location thing
@@ -348,7 +360,8 @@ while playing:
             card_y_pos = 750
 
             for card in game.player_hand:
-                card_surf = pygame.image.load("graphics/" + game.get_card(card) + ".png").convert()
+                card_surf = pygame.image.load(os.path.join(base_path, 'graphics', game.get_card(card) + ".png")).convert()
+                # card_surf = pygame.image.load("graphics/" + game.get_card(card) + ".png").convert()
                 card_rect = card_surf.get_rect(midleft = (card_x_pos, card_y_pos))
                 card_x_pos += 136
                 screen.blit(card_surf, card_rect)
@@ -357,12 +370,14 @@ while playing:
             ############################### DISPLAYING DEALER CARDS
             card_x_pos = 75
             card_y_pos = 300
-
-            card_surf = pygame.image.load("graphics/" + game.get_card(game.dealer_hand[0]) + ".png"). convert()
+            
+            card_surf = pygame.image.load(os.path.join(base_path, 'graphics', game.get_card(game.dealer_hand[0]) + ".png")).convert()
+            # card_surf = pygame.image.load("graphics/" + game.get_card(game.dealer_hand[0]) + ".png"). convert()
             card_rect = card_surf.get_rect(midleft = (card_x_pos, card_y_pos))
             card_x_pos += 136
             screen.blit(card_surf, card_rect)
-            blank_surf = pygame.image.load("graphics/blueback.png").convert()
+            blank_surf = pygame.image.load(os.path.join(base_path, 'graphics', 'blueback.png')).convert()
+            # blank_surf = pygame.image.load("graphics/blueback.png").convert()
             blank_rect = blank_surf.get_rect(midleft = (card_x_pos, card_y_pos))
             screen.blit(blank_surf, blank_rect)
 
@@ -418,7 +433,7 @@ while playing:
             card_y_pos = 300
 
             for card in game.dealer_hand:
-                card_surf = pygame.image.load("graphics/" + game.get_card(card) + ".png").convert()
+                card_surf = pygame.image.load(os.path.join(base_path, 'graphics', game.get_card(card) + ".png")).convert()
                 card_rect = card_surf.get_rect(midleft = (card_x_pos, card_y_pos))
                 card_x_pos += 136
                 screen.blit(card_surf, card_rect)
@@ -427,7 +442,7 @@ while playing:
             card_y_pos = 750
 
             for card in game.player_hand:
-                card_surf = pygame.image.load("graphics/" + game.get_card(card) + ".png").convert()
+                card_surf = pygame.image.load(os.path.join(base_path, 'graphics', game.get_card(card) + ".png")).convert()
                 card_rect = card_surf.get_rect(midleft = (card_x_pos, card_y_pos))
                 card_x_pos += 136
                 screen.blit(card_surf, card_rect)
