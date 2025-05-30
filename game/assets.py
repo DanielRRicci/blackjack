@@ -15,21 +15,24 @@ def load_assets():
 
     ################# LOAD FONTS #################
     font_path = resource_path("assets/font/BJ_Font.ttf")
+    assets["fonts"] = {}
 
-    assets["font_20"] = pygame.font.Font(font_path, 20)
-    assets["font_30"] = pygame.font.Font(font_path, 30)
-    assets["font_50"] = pygame.font.Font(font_path, 50)
-    assets["font_70"] = pygame.font.Font(font_path, 70)
-    assets["font_100"] = pygame.font.Font(font_path, 100)
-    assets["font_150"] = pygame.font.Font(font_path, 150)
+    assets["fonts"]["20"] = pygame.font.Font(font_path, 20)
+    assets["fonts"]["30"] = pygame.font.Font(font_path, 30)
+    assets["fonts"]["50"] = pygame.font.Font(font_path, 50)
+    assets["fonts"]["70"] = pygame.font.Font(font_path, 70)
+    assets["fonts"]["100"] = pygame.font.Font(font_path, 100)
+    assets["fonts"]["120"] = pygame.font.Font(font_path, 120)
+    assets["fonts"]["150"] = pygame.font.Font(font_path, 150)
 
     ################# LOAD BACKGROUND IMAGE #################
 
-    assets["board"] = pygame.image.load(resource_path("graphics/BJB.png")).convert()
+    assets["board"] = pygame.image.load(resource_path("assets/graphics/BJB.png")).convert()
+    assets["board_rect"] = assets["board"].get_rect(topleft=(0, 0))
 
     ################# LOAD CARD IMAGES #################
     ############## CARD BACK
-    assets["card_back"] = pygame.image.load(resource_path("graphics/blueback.png")).convert()
+    assets["card_back"] = pygame.image.load(resource_path("assets/graphics/blueback.png")).convert()
 
     ############## NUMBERED/FACE CARDS
     assets["cards"] = {}
@@ -37,7 +40,7 @@ def load_assets():
     for i in range(1, 14):
         for suit in suits:
             name = f"{i}{suit}"
-            path = resource_path(f"graphics/{name}.png")
+            path = resource_path(f"assets/graphics/{name}.png")
             assets["cards"][name] = pygame.image.load(path).convert()
 
     return assets

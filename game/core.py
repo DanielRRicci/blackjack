@@ -2,6 +2,7 @@ import random
 import os
 import sqlite3
 import time
+from . import database
 
 class BlackjackGame:
 
@@ -10,10 +11,13 @@ class BlackjackGame:
         self.player_hand = []
         self.dealer_hand = []
         self.deck = []
+        self.bet = 0
+        database.initialize_db()
+        self.balance, self.games_won, self.games_lost, self.games_tied, self.games_played = database.get_data(player_name)
 
-        self.get_data()
+    def start_round(self, new_bet):
+        self.place_bet(new_bet)
 
-    def start_round(self):
         self.player_hand_count = 0
         self.dealer_hand_count = 0
         self.game_over = False
@@ -33,7 +37,7 @@ class BlackjackGame:
         self.dealer_alt = False
         self.player_high_total = 0
         self.dealer_high_total = 0
-        self.bet = 0
+        
 
 
         self.init_deck()
@@ -62,9 +66,11 @@ class BlackjackGame:
         self.set_dealer_total()
 
     def double(self):
-        self.player_hit()
+        self.balance -= self.bet
         self.bet *= 2
-        self.stand()
+        self.player_hit()
+        if not self.game_over:
+            self.stand()
 
     def stand(self):
         while self.should_dealer_draw():
@@ -83,6 +89,9 @@ class BlackjackGame:
         return card
 
     def init_deck(self):
+        self.deck.clear()
+        self.player_hand.clear()
+        self.dealer_hand.clear()
         self.deck = list(range(52))
 
     def set_player_total(self):
@@ -187,8 +196,8 @@ class BlackjackGame:
     def should_dealer_draw(self):
         low = self.get_dealer_totals()[0]
         high = self.get_dealer_totals()[1]
-        if high > self.get_player_totals()[1]:
-            return False
+        # if high > self.get_player_totals()[1]:
+        #     return False
         if low != high:
             return (high < 18)
         else:
@@ -198,7 +207,7 @@ class BlackjackGame:
         if not self.paid:
             self.balance += self.payout()
             self.paid = True
-            self.save_data()
+            database.save_data(self.player_name, self.balance, self.games_won, self.games_lost, self.games_tied, self.games_played)
         
     def payout(self):
         payout = self.bet
